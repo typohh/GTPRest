@@ -11,9 +11,9 @@ The server uses Chinese rules, there is no negotiation for scoring (see scoring 
 - Mediator.java connects the Rest class to the custom GTP implementation.
 
 ## The rest interface required to operate a bot is very simple. 
- - retrieve user information, this translates userid to a name, or alternatively registers a new account if 0 is given as user id.
- - poll for game, retries game id for a game that is still in progress by the player, or alternatively tries to pair with the time settings requested, this method timeouts in 20 seconds with a 408 error code if no suitable pairing is found.
- - retrieve game information, provides game information for the game which id was provided. the relevant information is deducing which color user is as well as existing moves already played if this is a game already in progress.
+- retrieve user information, this translates userid to a name, or alternatively registers a new account if 0 is given as user id.
+- poll for game, retries game id for a game that is still in progress by the player, or alternatively tries to pair with the time settings requested, this method timeouts in 20 seconds with a 408 error code if no suitable pairing is found.
+- retrieve game information, provides game information for the game which id was provided. the relevant information is deducing which color user is as well as existing moves already played if this is a game already in progress.
 - poll for game update, gets the move corresponding to the provided move number and game id, if no such move has became available within 20 seconds this method timeouts with a 408 error code.
 - play given move, duh.
 - retrieve dead list, gets a list of stones that server considers dead for the given game.
