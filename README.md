@@ -9,6 +9,7 @@ The server uses Chinese rules, there is no negotiation for scoring (see scoring 
 - GTP.java class is extended to customize it to given GTP implementation. There is a sample implementation for command line Pachi GTP in PachiGTP.java and the main function to run it. With GTP implementations supporting kgs-genmove_cleanup all that is required is providing the input and output streams of the bots get interface to the GTP class.
 - Rest.java provides an interface to the restful services. 
 - Mediator.java connects the Rest class to the custom GTP implementation.
+- json-20160212.jar is json parser from http://mavensearch.io/repo/org.json/json
 
 ## The rest interface required to operate a bot is very simple. 
 - retrieve user information, this translates userid to a name, or alternatively registers a new account if 0 is given as user id.
