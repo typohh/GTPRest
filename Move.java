@@ -65,17 +65,7 @@ public class Move {
 	
 	public String toGtp() {
 		if( mY == -1 ) {
-			if( mX == -1 ) {
-				return "Pass";
-			} else if( mX == -2 ) {
-				return "Resign";
-			} else if( mX == -3 ) {
-				return "Resign"; 
-			} else if( mX == -4 ) {
-				return "Pass";
-			} else if( mX == -5 ) {
-				return "Pass";
-			}
+			return "Pass";
 		}
 		char x = (char) ('A' + mX);
 		if( x >= 'I' ) {
