@@ -16,11 +16,12 @@ public class Mediator {
 	public boolean matchDead() throws IOException {
 		Set<Move> deadGTP = mGTP.getDeadList();
 		Set<Move> deadRest = mRest.getDeadList();
-		if( deadRest.size() == deadGTP.size() ) {
-			for( Move m : deadRest ) {
-				if( !deadGTP.contains( m )) {
-					return false;
-				}
+		if( deadRest.size() != deadGTP.size() ) {
+			return false;
+		}
+		for( Move m : deadRest ) {
+			if( !deadGTP.contains( m )) {
+				return false;
 			}
 		}
 		return true;
