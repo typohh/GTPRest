@@ -68,42 +68,47 @@ public class WebSocketEngine {
 	private void processMessage( String pMessage ) throws IOException {
 		JSONObject jo = new JSONObject( pMessage );
 		long messageId = Long.parseLong( jo.getString( "messageId" ) );
-		if( jo.getString( "type" ).equals( "gameupdate" ) && jo.getLong( "gameId" ) != mGameId && jo.getLong( "gameId" ) != mPreviousGameId ) {
-			System.out.println( getTime() + " received move from unknown game, wont ack." );
-			return; // message from the future, lets not ack this quite yet..
-		}
-		if( jo.getString( "type" ).equals( "gameupdate" ) && jo.getLong( "gameId" ) == mGameId && jo.getLong( "moveNumber" ) > mMoves.size() ) {
-			System.out.println( getTime() + " received move from the future, wont ack." );
-			return; // message from the future, lets not ack this quite yet, alternatively when this happens could create a new channel..
-		}
-		if( jo.getString( "type" ).equals( "gameData" ) && mBotName == null ) {
-			System.out.println( getTime() + " received gamedata without a userdata first, wont ack." );
+		// if( jo.getString( "type" ).equals( "gameupdate" ) && jo.getLong( "gameId" ) != mGameId && jo.getLong( "gameId" ) != mPreviousGameId ) {
+		// System.out.println( getTime() + " received move from unknown game, wont ack." );
+		// return; // message from the future, lets not ack this quite yet..
+		// }
+		// if( jo.getString( "type" ).equals( "gameupdate" ) && jo.getLong( "gameId" ) == mGameId && jo.getLong( "moveNumber" ) > mMoves.size() ) {
+		// System.out.println( getTime() + " received move from the future, wont ack." );
+		// return; // message from the future, lets not ack this quite yet, alternatively when this happens could create a new channel..
+		// }
+		if( !jo.getString( "type" ).equals( "userdata" ) && mBotName == null ) {
+			System.out.println( getTime() + " received " + jo.getString( "type" ) + " without a userdata first, wont ack." );
 			return; // lets wait for userdata messsage first..
 		}
-		Rest.ack( mUserId , messageId );
 		if( jo.getString( "type" ).equals( "userdata" ) ) {
 			if( mGameId != 0 ) {
 				System.out.println( getTime() + " http://goratingserver.appspot.com/sgf/" + mGameId + ".sgf" );
 			}
 			mBotName = jo.getString( "name" );
 			System.out.println( getTime() + " rating is " + jo.getInt( "ratingMean" ) + "±" + jo.getInt( "ratingSD" ) + " after " + jo.getInt( "numberOfGames" ) + " games." );
+			Rest.ack( mUserId , messageId );
 			Rest.registerForPairing( mUserId , mBlitz , mFast );
 			return;
 		}
 		if( jo.getString( "type" ).equals( "ping" ) ) {
+			Rest.ack( mUserId , messageId );
 			return;
 		}
 		if( jo.getString( "type" ).equals( "disconnect" ) ) {
 			if( mUnique != Long.parseLong( jo.getString( "active" ) ) ) {
 				System.out.println( getTime() + " this account has been logged into from elsewhere." );
 			}
+			Rest.ack( mUserId , messageId );
 			return;
 		}
 		if( jo.getString( "type" ).equals( "deadlist" ) ) {
-			JSONArray ja = jo.getJSONArray( "dead" );
-			mDead = new HashSet<>();
-			for( int i = 0 ; i < ja.length() ; ++i ) {
-				mDead.add( Move.parseJson( ja.getString( i ) ) );
+			if( Long.parseLong( jo.getString( "gameId" ) ) == mGameId ) {
+				JSONArray ja = jo.getJSONArray( "dead" );
+				mDead = new HashSet<>();
+				for( int i = 0 ; i < ja.length() ; ++i ) {
+					mDead.add( Move.parseJson( ja.getString( i ) ) );
+				}
+				Rest.ack( mUserId , messageId );
 			}
 		}
 		if( jo.getString( "type" ).equals( "gamedata" ) ) {
@@ -122,33 +127,46 @@ public class WebSocketEngine {
 				System.out.println( getTime() + " playing against " + jo.getString( "blackName" ) + " (" + jo.getInt( "blackRatingMean" ) + "±" + jo.getInt( "blackRatingSD" ) + ")" );
 			}
 			long gameId = Long.parseLong( jo.getString( "gameId" ) );
-			if( gameId != mGameId ) {
-				mPreviousGameId = mGameId;
-			}
-			mGameId = gameId;
 			mByomiTime = jo.getInt( "timePerPeriod" );
 			System.out.println( getTime() + " giving bot " + (mByomiTime - mLag) / 1000 + " seconds per move." );
-			mGTP.start( mByomiTime - mLag );
-			mMoves.clear();
 			JSONArray jam = jo.getJSONArray( "moves" );
-			for( int i = 0 ; i < jam.length() ; ++i ) {
-				Move move = Move.parseJson( jam.getString( i ) );
-				mMoves.add( move );
-				mGTP.sendMove( move );
+			if( gameId != mGameId || jam.length() > mMoves.size() ) { // in case we acked moves following the game.. what a mess, need to resign it property, thx google, for providing a channel that
+																		// randomly drops messages as well as reorders them at random.
+				mPreviousGameId = mGameId;
+				if( gameId != mGameId ) {
+					mMoves.clear();
+				}
+				mGTP.start( mByomiTime - mLag );
+				for( int i = 0 ; i < jam.length() ; ++i ) {
+					Move move = Move.parseJson( jam.getString( i ) );
+					if( i == mMoves.size() ) { // only add new moves..
+						mMoves.add( move );
+					}
+					mGTP.sendMove( move );
+				}
+				mGameId = gameId;
 			}
+			Rest.ack( mUserId , messageId );
 		}
 		if( jo.getString( "type" ).equals( "gameupdate" ) ) {
 			int moveNumber = jo.getInt( "moveNumber" );
 			Move move = Move.parseJson( jo.getString( "move" ) );
-			// System.out.println( "receiving move " + moveNumber + "=" + move );
+			if( Long.parseLong( jo.getString( "gameId" ) ) != mGameId ) {
+				System.out.println( getTime() + " got move for wrong game, ignoring." );
+				return;
+			}
 			if( moveNumber == mMoves.size() - 1 && (move.equals( mMoves.lastElement() ) || move.equals( Move.sTimeLoss )) ) { // confirming own move..
 				if( move.equals( Move.sTimeLoss ) ) {
 					System.out.println( getTime() + " server reported that we lost on time!" );
 				}
+				Rest.ack( mUserId , messageId );
 				return;
-			}
-			if( moveNumber != mMoves.size() ) {
+			} else if( moveNumber < mMoves.size() - 1 ) { // past move..
 				System.out.println( getTime() + " discarding move " + moveNumber + "=" + move + " because expecting " + mMoves.size() );
+				Rest.ack( mUserId , messageId );
+				return;
+			} else if( moveNumber > mMoves.size() ) { // future move..
+				System.out.println( getTime() + " ignoring move " + moveNumber + "=" + move + " because expecting " + mMoves.size() );
 				return;
 			}
 			mMoves.add( move );
@@ -158,6 +176,7 @@ public class WebSocketEngine {
 				System.err.println( mMoves );
 				throw pE;
 			}
+			Rest.ack( mUserId , messageId );
 		}
 		processUpdate();
 	}
