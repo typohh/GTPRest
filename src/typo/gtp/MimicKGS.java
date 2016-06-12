@@ -22,11 +22,12 @@ public class MimicKGS {
 		long id=Long.parseLong( prop.getProperty( "id" , "0" ).trim() );
 		boolean blitz=Boolean.parseBoolean( prop.getProperty( "blitz" , "true" ).trim() );
 		boolean fast=Boolean.parseBoolean( prop.getProperty( "fast" , "true" ).trim() );
+		double lag=Double.parseDouble( prop.getProperty( "lag" , "3" ).trim() );
 		
 		CommandLineGTP gtp = new CommandLineGTP( engine , new String[] {
 				"boardsize 19", "komi 7.5"
 		} );
-		WebSocketEngine wse = new WebSocketEngine( gtp , id , blitz , fast );
+		WebSocketEngine wse = new WebSocketEngine( gtp , id , blitz , fast , lag );
 		wse.start();
 	}
 	
