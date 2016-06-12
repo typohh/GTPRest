@@ -15,6 +15,9 @@ public class Rest {
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 			conn.setRequestMethod( "GET" );
 			if( conn.getResponseCode() != 200 ) {
+				if( conn.getResponseCode() == 400 ) {
+					throw new Error( "you are using an old protocol version, please upgrade" );
+				}
 				try {
 					Thread.sleep( (int)Math.pow( 2 , i ) * 100l );
 				} catch( InterruptedException pE ) {
@@ -44,12 +47,12 @@ public class Rest {
 		sendRequest( mServerUrl + "?c=a&u=" + pUserId + "&m=" + pMessageId );
 	}
 
-	public static void resync( long pUserId ) throws IOException {
-		sendRequest( mServerUrl + "?c=r&u=" + pUserId );
+	public static void initialize( long pUserId ) throws IOException {
+		sendRequest( mServerUrl + "?c=i&u=" + pUserId );
 	}
 
 	public static String getChannelSecret( long pUserId , long pUnique ) throws IOException {
-		return sendRequest( mServerUrl + "?c=gcs&u=" + pUserId + "&a=" + pUnique );
+		return sendRequest( mServerUrl + "?c=gcs&u=" + pUserId + "&a=" + pUnique + "&v=100" );
 	}
 
 	public static long createUserId() throws IOException {
