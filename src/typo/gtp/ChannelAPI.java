@@ -117,7 +117,6 @@ public abstract class ChannelAPI {
     private final String CHANNEL_URL = "/_ah/channel/";
     private final String PROD_TALK_URL = "https://talkgadget.google.com/talkgadget/";
     private String channelId;
-//    private String applicationKey;
     private String clientId;
     private int requestId;
     private String sessionId;
@@ -188,6 +187,9 @@ public abstract class ChannelAPI {
             SID = null;
             messageId = 1;
             thPoll = null;
+            // lets really force it to forget everything..
+            readyState = ReadyState.CLOSED;
+            httpClient = HttpClientBuilder.create().build();
             open();
         } catch (final IOException e) {
             e.printStackTrace();
