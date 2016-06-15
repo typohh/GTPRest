@@ -2,8 +2,15 @@
 This provides simple java code for connecting a GTP (Go Text Protocol) interface to the the GRS (http://goratingserver.appspot.com/).
 
 ## http://goratingserver.appspot.com/
-The server uses Chinese rules, there is no negotiation for scoring (see scoring protocol below) and clock keeps running during scoring, no disconnect protection and no undo. There are no handicaps and players are paired with similar strength players to the extent possible, bots can be paired against each other. Upstream is via restful, and downstream via websockets.
+The server uses Chinese rules, there is no negotiation for scoring (see scoring protocol below) and clock keeps running during scoring. No disconnect protection and no undo. There are no handicaps and players are paired with similar strength players to the extent possible, bots can be paired against each other.
 
+## GTP commands required from the bot.
+- final_status_list dead
+- play
+- genmove
+- kgs-genmove_cleanup
+
+## files for communicating with the server
 - MimicKGS.jar contains the lib and src folders compiled into one jar. It can be run from command line with java -jar MimicKGS.jar to connect a GTP command line bot to the GRS. It needs the properties.ini file in the same directory for configurations.
 - properties.ini is simple configuration file for the bot. It specifies which account to use for the bot, how the bot is started (possible command line options etc), and if the bot plays blits or fast or both.
 
