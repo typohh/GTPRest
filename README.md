@@ -10,7 +10,7 @@ The server uses Chinese rules, there is no negotiation for scoring (see scoring 
 - genmove
 - kgs-genmove_cleanup
 
-## files for communicating with the server
+## Files for communicating with the server
 - MimicKGS.jar contains the lib and src folders compiled into one jar. It can be run from command line with java -jar MimicKGS.jar to connect a GTP command line bot to the GRS. It needs the properties.ini file in the same directory for configurations.
 - properties.ini is simple configuration file for the bot. It specifies which account to use for the bot, how the bot is started (possible command line options etc), and if the bot plays blits or fast or both.
 
